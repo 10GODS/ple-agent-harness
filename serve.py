@@ -41,6 +41,14 @@ import openai
 import taskbridge
 
 MODEL = os.environ.get("MODEL_NAME", "")
+# Provider compatibility: strict endpoints (e.g. Groq's OpenAI-compatible API)
+# refuse provider-extra fields on request assistant messages ('channel',
+# 'reasoning_content'). With STRICT_ASSISTANT_FIELDS=1 (set in submission.yaml
+# env for such providers), assistant history messages keep only the standard
+# fields, and reasoning is resent under the `reasoning` key Groq's gpt-oss
+# models accept.
+STRICT_ASSISTANT_FIELDS = os.environ.get("STRICT_ASSISTANT_FIELDS", "") == "1"
+ASSISTANT_KEEP = {"role", "content", "tool_calls", "name"}
 # The model's highest reasoning level: max for Claude, GLM, GPT-6 and
 # DeepSeek-V4, high for the others (Gemini refuses max). REASONING_EFFORT
 # overrides it.
@@ -737,6 +745,20 @@ class Reply:
       ]
     if self.reasoning:
       message["reasoning_content"] = self.reasoning
+    if STRICT_ASSISTANT_FIELDS:
+      # strict endpoints reject provider-extra fields on request assistant
+      # messages; keep the standard shape and resend reasoning under the
+      # `reasoning` key Groq's gpt-oss models accept
+      if "reasoning_content" in message:
+        message["reasoning"] = message.pop("reasoning_content")
+      message = {k: v for k, v in message.items()
+                 if k in ASSISTANT_KEEP or k == "reasoning"}
+      if "tool_calls" in message:
+        message["tool_calls"] = [
+            {"id": c["id"], "type": "function",
+             "function": {"name": c["name"], "arguments": c["arguments"]}}
+            for c in self.calls.values()
+        ]
     return drop_thinking(message, unless=signed)
 
 

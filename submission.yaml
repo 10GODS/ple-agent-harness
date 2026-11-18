@@ -24,3 +24,6 @@ serve: /opt/harness/venv/bin/python {src}/serve.py
 env:
   COMPACT_AT_TOKENS: "90000"
   MAX_OUTPUT_TOKENS: "4096"
+  # Groq's API refuses provider-extra fields (channel, reasoning_content)
+  # on request assistant messages; strict mode keeps standard fields only
+  STRICT_ASSISTANT_FIELDS: "1"
