@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 940" font-family="'Segoe UI', Roboto, Arial, sans-serif">
+  <rect width="1600" height="940" fill="#ffffff"/>
+
+  <text x="800" y="70" text-anchor="middle" font-size="42" font-weight="700" fill="#202124">PLE-Bench Agent Harness — Architecture</text>
+  <text x="800" y="108" text-anchor="middle" font-size="19" font-weight="600" fill="#5f6368">custom-openai harness · serve.py · /opt/harness · google-cloud/gpt-oss-120b</text>
+
+  <!-- Task container -->
+  <rect x="55" y="150" width="400" height="470" rx="16" fill="#e8f0fe" stroke="#1a73e8" stroke-width="3"/>
+  <text x="255" y="205" text-anchor="middle" font-size="27" font-weight="700" fill="#0b57d0">Task container</text>
+  <text x="255" y="232" text-anchor="middle" font-size="17" font-weight="600" fill="#5f6368">no network access</text>
+  <text x="255" y="285" text-anchor="middle" font-size="21" font-weight="700" fill="#202124">workdir/ — 61+ files</text>
+  <text x="255" y="318" text-anchor="middle" font-size="19" fill="#3c4043">PDFs · spreadsheets · CAD</text>
+  <text x="255" y="346" text-anchor="middle" font-size="19" fill="#3c4043">emails · field reports</text>
+  <line x1="95" y1="372" x2="415" y2="372" stroke="#1a73e8" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="255" y="402" text-anchor="middle" font-size="20" font-weight="700" fill="#0b57d0">Local MCP servers</text>
+  <text x="255" y="432" text-anchor="middle" font-size="18" fill="#3c4043">documents · spreadsheets</text>
+  <text x="255" y="459" text-anchor="middle" font-size="18" fill="#3c4043">email · CAD · documents</text>
+  <text x="255" y="505" text-anchor="middle" font-size="17" font-style="italic" fill="#5f6368">your commands run here</text>
+
+  <!-- Harness -->
+  <rect x="545" y="150" width="470" height="470" rx="16" fill="#fef7e0" stroke="#f9ab00" stroke-width="3.5"/>
+  <text x="780" y="205" text-anchor="middle" font-size="27" font-weight="700" fill="#b06000">Harness — serve.py</text>
+  <text x="780" y="232" text-anchor="middle" font-size="17" font-weight="600" fill="#5f6368">WebSocket server on $PORT</text>
+  <text x="780" y="285" text-anchor="middle" font-size="20" font-weight="700" fill="#202124">Agent loop</text>
+  <text x="780" y="313" text-anchor="middle" font-size="17" fill="#3c4043">context compaction</text>
+  <text x="780" y="339" text-anchor="middle" font-size="17" fill="#3c4043">streaming deadline manager</text>
+  <line x1="585" y1="362" x2="975" y2="362" stroke="#f9ab00" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="780" y="392" text-anchor="middle" font-size="19" font-weight="700" fill="#b06000">Tools</text>
+  <text x="780" y="418" text-anchor="middle" font-size="18" fill="#3c4043">bash · read_file · write_file · edit_file</text>
+  <text x="780" y="446" text-anchor="middle" font-size="19" font-weight="700" fill="#b06000">MCP access</text>
+  <text x="780" y="472" text-anchor="middle" font-size="18" fill="#3c4043">catalog discovery · mcp_find / mcp_call</text>
+  <text x="780" y="505" text-anchor="middle" font-size="17" font-style="italic" fill="#5f6368">streaming output · graceful done before timeout</text>
+
+  <!-- Model API -->
+  <rect x="1105" y="150" width="425" height="210" rx="16" fill="#e6f4ea" stroke="#188038" stroke-width="3"/>
+  <text x="1317" y="200" text-anchor="middle" font-size="25" font-weight="700" fill="#0d652d">Model API</text>
+  <text x="1317" y="238" text-anchor="middle" font-size="22" font-weight="700" fill="#202124">google-cloud</text>
+  <text x="1317" y="268" text-anchor="middle" font-size="24" font-weight="700" fill="#0d652d">gpt-oss-120b</text>
+  <text x="1317" y="303" text-anchor="middle" font-size="17" fill="#5f6368">Google-hosted · tool calling</text>
+  <text x="1317" y="333" text-anchor="middle" font-size="16" fill="#5f6368">dev: Gemini 3.6-flash (AI Studio)</text>
+
+  <!-- Evaluator -->
+  <rect x="1105" y="410" width="425" height="210" rx="16" fill="#f3e8fd" stroke="#a142f4" stroke-width="3"/>
+  <text x="1317" y="458" text-anchor="middle" font-size="24" font-weight="700" fill="#6d2bd9">PLE Evaluator</text>
+  <text x="1317" y="494" text-anchor="middle" font-size="17" fill="#3c4043">sends task over WebSocket</text>
+  <text x="1317" y="522" text-anchor="middle" font-size="17" fill="#3c4043">routes tool calls via JSON</text>
+  <text x="1317" y="550" text-anchor="middle" font-size="17" fill="#3c4043">grades deliverables 0.0–1.0</text>
+  <text x="1317" y="585" text-anchor="middle" font-size="16" font-weight="600" fill="#6d2bd9">6 hours per task · 85 tasks</text>
+
+  <!-- Arrows -->
+  <line x1="455" y1="385" x2="545" y2="385" stroke="#1a73e8" stroke-width="4"/>
+  <polygon points="545,385 528,376 528,394" fill="#1a73e8"/>
+  <line x1="545" y1="425" x2="455" y2="425" stroke="#1a73e8" stroke-width="4"/>
+  <polygon points="455,425 472,416 472,434" fill="#1a73e8"/>
+  <text x="500" y="368" text-anchor="middle" font-size="15" font-weight="700" fill="#0b57d0">tools</text>
+  <text x="500" y="456" text-anchor="middle" font-size="15" font-weight="700" fill="#0b57d0">results</text>
+
+  <line x1="1015" y1="230" x2="1105" y2="230" stroke="#188038" stroke-width="4"/>
+  <polygon points="1105,230 1088,221 1088,239" fill="#188038"/>
+  <line x1="1105" y1="272" x2="1015" y2="272" stroke="#188038" stroke-width="4"/>
+  <polygon points="1015,272 1032,263 1032,281" fill="#188038"/>
+  <text x="1060" y="212" text-anchor="middle" font-size="15" font-weight="700" fill="#0d652d">prompt</text>
+  <text x="1060" y="291" text-anchor="middle" font-size="15" font-weight="700" fill="#0d652d">reply</text>
+
+  <line x1="1015" y1="500" x2="1105" y2="500" stroke="#a142f4" stroke-width="4"/>
+  <polygon points="1105,500 1088,491 1088,509" fill="#a142f4"/>
+  <line x1="1105" y1="540" x2="1015" y2="540" stroke="#a142f4" stroke-width="4"/>
+  <polygon points="1015,540 1032,531 1032,549" fill="#a142f4"/>
+  <text x="1060" y="482" text-anchor="middle" font-size="15" font-weight="700" fill="#6d2bd9">task</text>
+  <text x="1060" y="562" text-anchor="middle" font-size="15" font-weight="700" fill="#6d2bd9">done</text>
+
+  <!-- Egress band -->
+  <rect x="55" y="672" width="1475" height="120" rx="14" fill="#fce8e6" stroke="#d93025" stroke-width="3"/>
+  <text x="792" y="722" text-anchor="middle" font-size="22" font-weight="700" fill="#b3261e">Egress proxy — every outbound byte is allow-listed</text>
+  <text x="792" y="756" text-anchor="middle" font-size="19" fill="#3c4043">only the model endpoint is reachable · no web search · no external APIs · task container: no network at all</text>
+  <text x="792" y="782" text-anchor="middle" font-size="17" fill="#5f6368">kit check passes: build ✓ · model ✓ · listen ✓ · smoke ✓ · mcp ✓</text>
+
+  <text x="792" y="852" text-anchor="middle" font-size="17" font-weight="600" fill="#5f6368">PLE-Bench (Physical-Engineering's Last Exam) · 10GODS/ple-agent-harness · harness solves engineering tasks end-to-end</text>
+</svg>
