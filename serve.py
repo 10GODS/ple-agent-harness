@@ -75,6 +75,22 @@ MAX_TOOLS = 128
 KEEP_RECENT_RESULTS = 12
 FINISH_MARGIN_SEC = 180
 RETRY_WAITS = (5, 15, 30, 60, 120, 180, 300, 600)
+
+# Pre-submit deliverable gate: backticked absolute paths with a file extension
+# in the task instruction name the expected deliverable(s). The done path is
+# only accepted once each exists in the container (or the rejection budget
+# is spent), so a model that stops early is sent back to finish the file.
+DELIVERABLE_RE = re.compile(r"`(/[^\s`]+?\.[A-Za-z0-9]{1,8})`")
+
+
+def expected_deliverables(instruction: str) -> list[str]:
+  seen, out = set(), []
+  for match in DELIVERABLE_RE.findall(instruction):
+    if match not in seen:
+      seen.add(match)
+      out.append(match)
+  return out[:10]
+
 # How endpoints word an error saying the conversation no longer fits (xAI's:
 # "maximum prompt length is N but the request contains M tokens"). OpenAI's
 # error for too many tools ("'tools': array too long") does not match.
@@ -882,6 +898,8 @@ class Agent:
     ]
     # head: the text of an answer cut off at the output limit
     nudges, head = 0, ""
+    done_rejections = 0
+    expected = expected_deliverables(self.session.instruction)
     while True:
       left = self.session.time_left()
       if left is not None and left < self.finish_margin:
@@ -919,6 +937,32 @@ class Agent:
           })
           continue
         if visible(reply.text) or nudges >= 2:
+          missing = []
+          for target in expected:
+            check = await self.run_tool(
+                "bash",
+                {
+                    "command": "test -e '"
+                    + target.replace("'", r"'\''")
+                    + "' && echo OK || echo MISSING",
+                },
+            )
+            if "MISSING" in check:
+              missing.append(target)
+          if missing and done_rejections < 3:
+            done_rejections += 1
+            self.messages.append({
+                "role": "user",
+                "content": (
+                    "You appear to be finished, but the required deliverable(s) "
+                    "do not exist in the container yet:\n"
+                    + "\n".join("- " + p for p in missing)
+                    + "\nExecute whatever step creates them (for example, run "
+                    "your generate_submission.py). Do not finish until every "
+                    "required deliverable exists."
+                ),
+            })
+            continue
           return text or self.session.final_message
         nudges += 1  # only consecutive empty turns end the run
         self.messages.append({
