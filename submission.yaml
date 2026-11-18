@@ -13,8 +13,8 @@
 # limitations under the License.
 
 name: custom-openai
-model_api: openai-compatible/openai/gpt-oss-120b
-model_base_url: https://api.groq.com/openai/v1
+model_api: openai-compatible/gemini-3.6-flash
+model_base_url: https://generativelanguage.googleapis.com/v1beta/openai
 install: >-
   uv venv --python 3.12 /opt/harness/venv
   && uv pip install --python /opt/harness/venv/bin/python -r {src}/requirements.txt
