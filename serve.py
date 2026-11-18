@@ -53,8 +53,11 @@ ASSISTANT_KEEP = {"role", "content", "tool_calls", "name"}
 # DeepSeek-V4, high for the others (Gemini refuses max). REASONING_EFFORT
 # overrides it.
 MAX_EFFORT_MODELS = ("claude", "glm", "gpt-6", "deepseek-v4")
-EFFORT = os.environ.get("REASONING_EFFORT") or (
-    "max" if any(m in MODEL.lower() for m in MAX_EFFORT_MODELS) else "high"
+# Gemma has no reasoning_effort support (it 400s "Thinking budget is not
+# supported"); only send one when the model is in the effort-friendly list.
+EFFORT = os.environ.get("REASONING_EFFORT", "") or (
+    "" if "gemma" in MODEL.lower()
+    else "max" if any(m in MODEL.lower() for m in MAX_EFFORT_MODELS) else "high"
 )
 # OpenAI's GPT-6 models only support function tools combined with
 # reasoning_effort on the Responses API. Other models also switch to
