@@ -868,7 +868,7 @@ class Agent:
     # max_tokens once an endpoint refuses this one
     self.token_limit = "max_completion_tokens"
     # empty once an endpoint refuses it
-    self.effort = {"reasoning_effort": EFFORT}
+    self.effort = {"reasoning_effort": EFFORT} if EFFORT else {}
     # whether calls go to the Responses API rather than Chat Completions
     self.responses = MODEL.lower().startswith(RESPONSES_MODELS)
     self.finish_margin = FINISH_MARGIN_SEC
