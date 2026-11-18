@@ -74,7 +74,7 @@ DIRECT_MCP_CHARS = 40_000
 MAX_TOOLS = 128
 KEEP_RECENT_RESULTS = 12
 FINISH_MARGIN_SEC = 180
-RETRY_WAITS = (5, 15, 30, 60, 120)
+RETRY_WAITS = (5, 15, 30, 60, 120, 180, 300, 600)
 # How endpoints word an error saying the conversation no longer fits (xAI's:
 # "maximum prompt length is N but the request contains M tokens"). OpenAI's
 # error for too many tools ("'tools': array too long") does not match.
@@ -754,11 +754,23 @@ class Reply:
       message = {k: v for k, v in message.items()
                  if k in ASSISTANT_KEEP or k == "reasoning"}
       if "tool_calls" in message:
-        message["tool_calls"] = [
-            {"id": c["id"], "type": "function",
-             "function": {"name": c["name"], "arguments": c["arguments"]}}
-            for c in self.calls.values()
-        ]
+        # Google's OpenAI-compatible Gemini endpoint REQUIRES the echoed
+        # extra_content (google.thought_signature) in multi-turn tool calls;
+        # other strict backends (e.g. Groq) reject unknown fields outright.
+        base_url = os.environ.get("MODEL_BASE_URL") or ""
+        if any(p in base_url for p in ("generativelanguage.googleapis.com", "googleapis.com")):
+          message["tool_calls"] = [
+              {**c["extra"], "id": c["id"], "type": "function",
+               "function": {**c["function_extra"], "name": c["name"],
+                            "arguments": c["arguments"]}}
+              for c in self.calls.values()
+          ]
+        else:
+          message["tool_calls"] = [
+              {"id": c["id"], "type": "function",
+               "function": {"name": c["name"], "arguments": c["arguments"]}}
+              for c in self.calls.values()
+          ]
     return drop_thinking(message, unless=signed)
 
 
