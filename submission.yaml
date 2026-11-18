@@ -13,8 +13,7 @@
 # limitations under the License.
 
 name: custom-openai
-model_api: openai-compatible/gemini-3.5-flash-lite
-model_base_url: https://generativelanguage.googleapis.com/v1beta/openai
+model_api: google-cloud/gemma-4-26b
 install: >-
   uv venv --python 3.12 /opt/harness/venv
   && uv pip install --python /opt/harness/venv/bin/python -r {src}/requirements.txt
@@ -22,7 +21,7 @@ serve: /opt/harness/venv/bin/python {src}/serve.py
 # gpt-oss 120B's context window is 131,072 tokens: compact the prompt at 90,000, which leaves room for the default
 # 32,000-token reply (raise it for a model with a larger window)
 env:
-  COMPACT_AT_TOKENS: "90000"
+  COMPACT_AT_TOKENS: "60000"
   MAX_OUTPUT_TOKENS: "4096"
   # Groq's API refuses provider-extra fields (channel, reasoning_content)
   # on request assistant messages; strict mode keeps standard fields only
