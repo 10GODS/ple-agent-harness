@@ -1,32 +1,32 @@
-import sys, ifcopenshell, ifcopenshell.util.element
+import sys, ifcopenshell, ifcopenshell.api
 
-def create_ifc(file_path='output/model.ifc'):
-    # Create a new IFC file with basic structure
+def create_ifc(output_path='output/model.ifc'):
+    # Create a new IFC file with minimal required structure
     ifc = ifcopenshell.file(schema='IFC4')
     # Project
     project = ifc.create_entity('IfcProject', GlobalId=ifcopenshell.guid.new(), Name='Data Hall Project')
+    ifc.add(project)
+    # Units (millimetre)
+    unit_assignment = ifc.create_entity('IfcUnitAssignment', Units=[
+        ifc.create_entity('IfcSIUnit', UnitType='LENGTHUNIT', Name='METRE', Prefix='MILLI')
+    ])
+    project.UnitsInContext = unit_assignment
+    # Site
     site = ifc.create_entity('IfcSite', GlobalId=ifcopenshell.guid.new(), Name='Site')
+    # Building
     building = ifc.create_entity('IfcBuilding', GlobalId=ifcopenshell.guid.new(), Name='Data Hall')
-    storey = ifc.create_entity('IfcBuildingStorey', GlobalId=ifcopenshell.guid.new(), Name='Ground Floor', Elevation=0.0)
-    # Relate hierarchy
-    ifc.create_entity('IfcRelAggregates', GlobalId=ifcopenshell.guid.new(), RelatingObject=project, RelatedObjects=[site])
-    ifc.create_entity('IfcRelAggregates', GlobalId=ifcopenshell.guid.new(), RelatingObject=site, RelatedObjects=[building])
-    ifc.create_entity('IfcRelAggregates', GlobalId=ifcopenshell.guid.new(), RelatingObject=building, RelatedObjects=[storey])
-    # Simple placeholder rack
-    rack = ifc.create_entity('IfcFurniture', GlobalId=ifcopenshell.guid.new(), Name='Rack 1', ObjectType='Rack')
-    # Placement at origin
-    placement = ifc.create_entity('IfcLocalPlacement', PlacementRelTo=None,
-                                  RelativePlacement=ifc.create_entity('IfcAxis2Placement3D',
-                                    Location=ifc.create_entity('IfcCartesianPoint', (0.0,0.0,0.0)),
-                                    Axis=ifc.create_entity('IfcDirection', (0.0,0.0,1.0)),
-                                    RefDirection=ifc.create_entity('IfcDirection', (1.0,0.0,0.0))))
-    rack.ObjectPlacement = placement
-    # Add to storey
-    ifc.create_entity('IfcRelContainedInSpatialStructure', GlobalId=ifcopenshell.guid.new(),
-                      RelatingStructure=storey, RelatedElements=[rack])
+    # Storey
+    storey = ifc.create_entity('IfcBuildingStorey', GlobalId=ifcopenshell.guid.new(), Name='Level 0', Elevation=0.0)
+    # Relate entities via aggregation relationships
+    # Project contains Site
+    rel_proj_site = ifc.create_entity('IfcRelAggregates', GlobalId=ifcopenshell.guid.new(), RelatingObject=project, RelatedObjects=[site])
+    # Site contains Building
+    rel_site_building = ifc.create_entity('IfcRelAggregates', GlobalId=ifcopenshell.guid.new(), RelatingObject=site, RelatedObjects=[building])
+    # Building contains Storey
+    rel_building_storey = ifc.create_entity('IfcRelAggregates', GlobalId=ifcopenshell.guid.new(), RelatingObject=building, RelatedObjects=[storey])
     # Write file
-    ifc.write(file_path)
+    ifc.write(output_path)
 
 if __name__ == '__main__':
-    out_path = sys.argv[1] if len(sys.argv) > 1 else 'output/model.ifc'
-    create_ifc(out_path)
+    out = sys.argv[1] if len(sys.argv)>1 else 'output/model.ifc'
+    create_ifc(out)

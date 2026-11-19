@@ -8,9 +8,9 @@ PLE-Bench tasks are not chat problems. Each one hands an agent a working directo
 
 We ran the harness on `data-hall-mep-routing` — rebuild a data-hall model from a seven-sheet drawing set and route three overhead services clash-free. Three failures dominated, and each changed the harness.
 
-**Premature completion.** The first run ended in **3 steps / 16 s**. The model wrote a 2 KB `solution.py`, claimed it generated an IFC4 model, and stopped — without listing a single input file. Score: **0/12 checks**. The harness had a gate that checked the deliverable *existed*, and it did. Existence is not verification. We added a progress gate: a run may not finish until it has (a) opened at least one input (`ls/find/cat/read_file`) and (b) run a shell command after its last write (`dirty` flag cleared). The same model then took **7 steps / 95 s**, inspected the work directory, executed its script, and emitted a real IFC file. Still 0/12 — the geometry was wrong — but the failure became visible and diagnosable instead of a hallucinated success.
+**Premature completion.** The first run ended in **3 steps / 16 s**. The model wrote a 2 KB `solution.py`, claimed it generated an IFC4 model, and stopped — without listing a single input file. Score: **0/12 checks**. The harness had a gate that checked the deliverable *existed*, and it did. Existence is not verification. We added a progress gate: a run may not finish until it has (a) opened at least one input (`ls/find/cat/read_file`) and (b) run a shell command after its last write (`dirty` flag cleared). The same model then took **12 steps / 201 s**, read input files, executed its script three times, and emitted a real IFC file. Still 0/12 — the geometry was wrong — but the failure became visible and diagnosable instead of a hallucinated success.
 
-**Context growth versus free-tier token budgets.** Our longest run (46 steps) averaged **37,582 prompt tokens per call** (1.73 M total, 1.57 M cached). Free inference tiers meter input tokens per minute: 8,000 for `gpt-oss-120b` on Groq, 16,000 for Gemma 4 26B on AI Studio. A 37 k-token call can never fit, so every call after the first few returned 429 and the sweep died with "harness exited before model produced any output." Fix: make the caps tunable and tight — `TOOL_RESULT_CHARS` 30,000 → 10,000, `KEEP_RECENT_RESULTS` 12 → 3, `COMPACT_AT_TOKENS` 60,000 → 6,000. The proof run now averages **2,479 prompt tokens per call** (17,354 / 7) with zero 429s.
+**Context growth versus free-tier token budgets.** Our longest run (46 steps) averaged **37,582 prompt tokens per call** (1.73 M total, 1.57 M cached). Free inference tiers meter input tokens per minute: 8,000 for `gpt-oss-120b` on Groq, 16,000 for Gemma 4 26B on AI Studio. A 37 k-token call can never fit, so every call after the first few returned 429 and the sweep died with "harness exited before model produced any output." Fix: make the caps tunable and tight — `TOOL_RESULT_CHARS` 30,000 → 10,000, `KEEP_RECENT_RESULTS` 12 → 3, `COMPACT_AT_TOKENS` 60,000 → 6,000. The proof run now averages **2,885 prompt tokens per call** (34,621 / 12) with zero 429s.
 
 **Model routes that look free but are not.** `gemini-4-argon` and `gemini-3.1-pro-preview` report a free-tier limit of **0** — not an exhausted quota that resets, but a model unavailable without billing. `gemini-3.8-flash` returned **503** on every probe for 24 hours. Vertex AI returns 403 "requires billing" on our project. Gemma 4 26B works, but a 26B-A4B model with a 16 k/min input cap still cannot hold a 37 k-token call. The one workable free route was the same open-weights `gpt-oss-120b` served by Groq behind a local LiteLLM proxy.
 
@@ -18,8 +18,8 @@ We ran the harness on `data-hall-mep-routing` — rebuild a data-hall model from
 
 | Ablation | Before | After |
 |---|---|---|
-| progress gate | 3 steps, no input opened, 16 s | 7 steps, input read, script executed, 95 s |
-| `COMPACT_AT_TOKENS` 60k → 6k | 37.6k prompt tokens/call → 429 | 2.5k prompt tokens/call → 200 |
+| progress gate | 3 steps, no input opened, 16 s | 12 steps, inputs read, script executed, 201 s |
+| `COMPACT_AT_TOKENS` 60k → 6k | 37.6k prompt tokens/call → 429 | 2.9k prompt tokens/call → 200 |
 | `TOOL_RESULT_CHARS` 30k → 10k | one read = ~7.5k tokens | one read ≤ 2.5k tokens |
 | strict assistant fields | 400 on history echo | clean 200s |
 
@@ -33,7 +33,7 @@ That is the honest finding: the binding constraint here is model capability unde
 
 | Model (route) | Task | Steps | Prompt tokens | Wall time | Score |
 |---|---|---|---|---|---|
-| `gpt-oss-120b` (Groq free) | data-hall-mep-routing | 7 | 17,354 | 95 s | 0.000 (0/12) |
+| `gpt-oss-120b` (Groq free) | data-hall-mep-routing | 12 | 34,621 | 201 s | 0.000 (0/12) |
 | `gemini-3.5-flash-lite` (AI Studio free) | wind-diaphragm-shear | 46 | 1,728,773 | 628 s | 0.0476 (1/21) |
 | `gemma-4-26b` (AI Studio free) | data-hall-mep-routing | — | — | aborted | 429 at 16k TPM |
 | `gemini-4-argon`, `gemini-3.1-pro` | — | — | — | — | free-tier limit = 0 |
@@ -45,7 +45,7 @@ The long-context Gemini run earned partial credit (1 of 21 checks) but spent 100
 
 ## 4. Efficiency & scaling (20 pts)
 
-The budget arithmetic drives every setting. At 8,000 input tokens/minute, a call can use at most ~7,000 prompt tokens plus ~1,000 output tokens, which allows roughly one call per minute and ~60 calls/hour. We therefore compact at 6,000 tokens, cap output at 2,048, and ask for low reasoning effort. The measured proof run used **8 model calls, 17,354 prompt + 1,293 completion tokens, 95 s, $0 cash** — about **$0.0036** at gpt-oss list price ($0.15/M input, $0.75/M output). The 46-step Gemini run used 1.73 M prompt + 22.9 k completion tokens in 628 s, about **$0.17** at flash-lite list price.
+The budget arithmetic drives every setting. At 8,000 input tokens/minute, a call can use at most ~7,000 prompt tokens plus ~1,000 output tokens, which allows roughly one call per minute and ~60 calls/hour. We therefore compact at 6,000 tokens, cap output at 2,048, and ask for low reasoning effort. The measured proof run used **12 model calls, 34,621 prompt + 1,787 completion tokens, 201 s, $0 cash** — about **$0.0065** at gpt-oss list price ($0.15/M input, $0.75/M output). The 46-step Gemini run used 1.73 M prompt + 22.9 k completion tokens in 628 s, about **$0.17** at flash-lite list price.
 
 Levers that mattered: compaction before every call (not only on context errors), hard tool-result caps, a 10-minute retry ladder for 429/503, single-trial iteration, and per-task runs that download only that task's folder instead of the 33,345-file dataset. Caching helped the long run (1.57 M of 1.73 M prompt tokens were cached) but does not raise a per-minute quota.
 
@@ -54,7 +54,7 @@ Scaling is linear in steps, not parallel: one free key is one quota. A 100-step 
 ## 5. Clarity & visuals (15 pts)
 
 1. **Architecture** (`assets/architecture.png`) — the harness serves the task over WebSocket, executes tools inside the Docker task container, and reaches the model only through the local LiteLLM proxy; the task container has no internet egress.
-2. **Score vs. cost** (`assets/score_vs_cost.png`) — the two measured runs plotted as score against prompt tokens, with free-tier per-minute ceilings marked; the Gemini point buys 0.048 for 1.7 M tokens, the gpt-oss point costs 17 k tokens for a cleaner but unscored attempt.
+2. **Score vs. cost** (`assets/score_vs_cost.png`) — the two measured runs plotted as score against prompt tokens, with free-tier per-minute ceilings marked; the Gemini point buys 0.048 for 1.7 M tokens, the gpt-oss point costs 35 k tokens for a cleaner but unscored attempt.
 3. **Failure breakdown** (`assets/failure_breakdown.png`) — the observed failure modes: premature completion, context-window/quota death, model unavailable (limit 0), and capability shortfall on drawing interpretation.
 
 The repository contains the harness (`serve.py`, `submission.yaml`), the exported `artifacts/` with `manifest.json`, and the three figures. The kit's `artifacts` review accepts the entry (1 of 29 dev tasks usable; the rest score 0 and are reported as missing), and `kit check` validates submission, build, smoke, model and listen stages.
