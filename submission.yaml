@@ -18,14 +18,15 @@ install: >-
   uv venv --python 3.12 /opt/harness/venv
   && uv pip install --python /opt/harness/venv/bin/python -r {src}/requirements.txt
 serve: /opt/harness/venv/bin/python {src}/serve.py
-# gpt-oss 120B: 131,072-token window. The budget knobs are conservative so the
-# harness also runs on free tiers with small per-minute token quotas.
+# gpt-oss 120B: 131,072-token window. Stage 2 runs on Google's proxy (no 8k
+# TPM free-tier cap), so caps use the real window. For local free-tier dev
+# runs, override via --env-file with tight values (see judge.env).
 env:
-  COMPACT_AT_TOKENS: "6000"
-  MAX_OUTPUT_TOKENS: "2048"
-  REASONING_EFFORT: "low"
-  TOOL_RESULT_CHARS: "10000"
-  KEEP_RECENT_RESULTS: "3"
+  COMPACT_AT_TOKENS: "60000"
+  MAX_OUTPUT_TOKENS: "8192"
+  REASONING_EFFORT: "medium"
+  TOOL_RESULT_CHARS: "30000"
+  KEEP_RECENT_RESULTS: "12"
   # Groq's API refuses provider-extra fields (channel, reasoning_content)
   # on request assistant messages; strict mode keeps standard fields only
   STRICT_ASSISTANT_FIELDS: "1"
