@@ -70,12 +70,12 @@ RESPONSES_ONLY = re.compile(
 # (marked()); other models cache on their own.
 CACHE_MARK = "claude" in MODEL.lower()
 COMPACT_AT_TOKENS = int(os.environ.get("COMPACT_AT_TOKENS", "150000"))
-TOOL_RESULT_CHARS = 30_000
+TOOL_RESULT_CHARS = int(os.environ.get("TOOL_RESULT_CHARS", "30000"))
 # MCP tools are offered as functions up to this many characters of JSON in all
 DIRECT_MCP_CHARS = 40_000
 # functions one request may offer (OpenAI's limit), the built-in four included
 MAX_TOOLS = 128
-KEEP_RECENT_RESULTS = 12
+KEEP_RECENT_RESULTS = int(os.environ.get("KEEP_RECENT_RESULTS", "12"))
 FINISH_MARGIN_SEC = 180
 RETRY_WAITS = (5, 15, 30, 60, 120, 180, 300, 600)
 
@@ -903,6 +903,13 @@ class Agent:
     nudges, head = 0, ""
     done_rejections = 0
     expected = expected_deliverables(self.session.instruction)
+    # Progress gate: a run may only finish after it has inspected an input and
+    # re-checked whatever it last wrote. On a one-shot task this costs one or
+    # two extra turns; on a real task it stops an unverified submit.
+    inspected = False
+    dirty = False  # a file was written since the last shell command
+    gate_rejections = 0
+    INSPECT = re.compile(r"\b(ls|find|cat|head|tail|tree|file|du|grep|sed|awk|unzip|python3?|pdftotext|strings)\b")
     while True:
       left = self.session.time_left()
       if left is not None and left < self.finish_margin:
@@ -966,6 +973,23 @@ class Agent:
                 ),
             })
             continue
+          if gate_rejections < 2 and (not inspected or dirty):
+            gate_rejections += 1
+            if dirty:
+              ask = (
+                  "You changed a file since your last shell command. Run or "
+                  "check the deliverable you just wrote (for example, execute "
+                  "it or a checker the task provides) and fix anything it "
+                  "reports. Then give your summary."
+              )
+            else:
+              ask = (
+                  "You have not inspected the task's input files yet. List the "
+                  "work directory and read the files you were given before you "
+                  "finish; then check your deliverable."
+              )
+            self.messages.append({"role": "user", "content": ask})
+            continue
           return text or self.session.final_message
         nudges += 1  # only consecutive empty turns end the run
         self.messages.append({
@@ -983,6 +1007,16 @@ class Agent:
             if isinstance(args, dict)
             else args
         )
+        if call["name"] == "read_file" or (
+            call["name"] == "bash"
+            and isinstance(args, dict)
+            and INSPECT.search(str(args.get("command", "")))
+        ):
+          inspected = True
+        if call["name"] in ("write_file", "edit_file"):
+          dirty = True
+        elif call["name"] == "bash":
+          dirty = False
         if reply.finish == "length" and isinstance(args, str):
           result += (
               f" Your reply hit the {self.max_output}-token output limit; write"

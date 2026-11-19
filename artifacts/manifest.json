@@ -1,0 +1,41 @@
+{
+  "format": 1,
+  "dev_set": "85ad6d96fbf76ee64d9fb6339b3bf342b07128a2ebadc0a10f008c95dac01a48",
+  "created": "2026-11-19T04:24:36Z",
+  "harness": {
+    "name": "custom-openai",
+    "model_api": "google-cloud/gpt-oss-120b",
+    "tree": "3b4d167819723f26d4a83ccdbab312d8cb6407f2ad44b9da380bf812aaf29fad",
+    "files": {
+      ".gitignore": "100644 8d30b24870b937250899baf8ff6602ca3d2a11c2",
+      "LICENSE": "100644 d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "README.md": "100644 a4fad72e81ca01ccd7ca9e8064cc5944a858a1eb",
+      "assets/architecture.png": "100644 7f027fc6774b96db3fb003cabbc2710cfab06d7d",
+      "assets/architecture.svg": "100755 cc4b767745c4c7ac060b1fa6c7862e54982c0908",
+      "assets/failure_breakdown.png": "100644 15ae79ba0fc658149d241f15f8f75765e6d325d6",
+      "assets/score_vs_cost.png": "100644 9864c1fd245cc7b8e8c9c7aa0bbd993aa0123504",
+      "requirements.txt": "100644 13ba6dbe5a230d71da63dd42ee49e86f580056dc",
+      "serve.py": "100644 826fa118c5982d0f522de252cd8ce16d8faa5416",
+      "submission.yaml": "100644 38227a7981841ecb21930f68680d6ce521c71bb4",
+      "taskbridge.py": "100644 26cc3d6cf8dbcaed859731ce9a6881f4ca8bfe40"
+    },
+    "commit": "adbdfceac9f9ec82aa5efc35c9a65118a423c86d",
+    "dirty": true
+  },
+  "tasks": {
+    "data-hall-mep-routing": {
+      "run": "custom-openai-20261119-042157",
+      "trial": "data-hall-mep-routing__ewNYKWJ",
+      "ended": "ok",
+      "reward": 0.0,
+      "tree": "3b4d167819723f26d4a83ccdbab312d8cb6407f2ad44b9da380bf812aaf29fad",
+      "dev_set": "85ad6d96fbf76ee64d9fb6339b3bf342b07128a2ebadc0a10f008c95dac01a48",
+      "files": {
+        "app/files/dc_model__hall_seed000_d000__mep_routing/output/solution.py": "a0b06843ec39c10bd91c85376d773a5d286b4eea"
+      },
+      "final_message": "7f2e3506911dbaad63757a4d141a7e261fe60e38",
+      "deleted": [],
+      "skipped": []
+    }
+  }
+}
