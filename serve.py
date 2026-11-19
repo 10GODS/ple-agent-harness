@@ -909,7 +909,7 @@ class Agent:
     inspected = False
     dirty = False  # a file was written since the last shell command
     gate_rejections = 0
-    INSPECT = re.compile(r"\b(ls|find|cat|head|tail|tree|file|du|grep|sed|awk|unzip|python3?|pdftotext|strings)\b")
+    INSPECT = re.compile(r"\b(ls|find|cat|head|tail|tree|file|du|grep|unzip|pdftotext|strings|wc)\b")
     while True:
       left = self.session.time_left()
       if left is not None and left < self.finish_margin:
